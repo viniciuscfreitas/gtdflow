@@ -21,7 +21,8 @@ import {
   MessageSquare,
   Users
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { GTDItem } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -42,7 +43,8 @@ export function EditWaitingDialog({ item, open, onOpenChange }: EditWaitingDialo
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
   const [delegationType, setDelegationType] = useState<'delegated' | 'waiting' | 'external'>('delegated');
 
-  const { update } = useGTDItems();
+  const { user } = useAuth();
+  const { update } = useFirestoreGTD(user);
 
   useEffect(() => {
     if (item) {
@@ -95,7 +97,7 @@ export function EditWaitingDialog({ item, open, onOpenChange }: EditWaitingDialo
       stakeholder: delegatedTo.trim(),
       context,
       energy,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
+              ...(dueDate && dueDate.trim() !== '' ? { dueDate: new Date(dueDate) } : {}),
       updatedAt: new Date(),
       // Adicionar tags para follow-up
       tags: [

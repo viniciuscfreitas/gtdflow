@@ -19,7 +19,8 @@ import {
   Calendar,
   Target
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 
 const CreateProjectSchema = z.object({
@@ -37,7 +38,8 @@ interface CreateProjectDialogProps {
 }
 
 export function CreateProjectDialog({ onClose, onSuccess }: CreateProjectDialogProps) {
-  const { create } = useGTDItems();
+  const { user } = useAuth();
+  const { create } = useFirestoreGTD(user);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const {

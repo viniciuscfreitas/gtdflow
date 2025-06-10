@@ -128,15 +128,17 @@ export function ProcessItemDialog({ itemId, onClose, onSuccess }: ProcessItemDia
   const handleComplete = async (finalType?: typeof actionType) => {
     const type = finalType || actionType;
     
+
+    
     try {
       switch (type) {
         case 'delete':
-          remove(item.id);
+          await remove(item.id);
           toast.success('Item excluído');
           break;
           
         case 'reference':
-          update(item.id, {
+          await update(item.id, {
             type: 'reference',
             status: 'active',
             title,
@@ -146,7 +148,7 @@ export function ProcessItemDialog({ itemId, onClose, onSuccess }: ProcessItemDia
           break;
           
         case 'someday':
-          update(item.id, {
+          await update(item.id, {
             type: 'someday-maybe',
             status: 'active',
             title,
@@ -156,13 +158,19 @@ export function ProcessItemDialog({ itemId, onClose, onSuccess }: ProcessItemDia
           break;
           
         case 'project':
-          update(item.id, {
+          const projectData: Partial<GTDItem> = {
             type: 'project',
             status: 'active',
             title,
-            description,
-            dueDate: dueDate ? new Date(dueDate) : undefined
-          });
+            description
+          };
+          
+          // Só adicionar dueDate se não for vazio
+          if (dueDate && dueDate.trim() !== '') {
+            projectData.dueDate = new Date(dueDate);
+          }
+          
+          await update(item.id, projectData);
           toast.success('Projeto criado');
           break;
           
@@ -174,27 +182,35 @@ export function ProcessItemDialog({ itemId, onClose, onSuccess }: ProcessItemDia
           const gtdType = quadrant === 'urgent-not-important' ? 'waiting-for' : 'next-action';
           
           // Update GTD item
-          update(item.id, {
+          const updateData: Partial<GTDItem> = {
             type: gtdType,
             status: 'active',
             title,
             description,
             context,
-            energy,
-            dueDate: dueDate ? new Date(dueDate) : undefined
-          });
+            energy
+          };
+          
+          // Só adicionar dueDate se não for vazio
+          if (dueDate && dueDate.trim() !== '') {
+            updateData.dueDate = new Date(dueDate);
+          }
+          
+          await update(item.id, updateData);
           
           // Add to Eisenhower Matrix
-          createEisenhowerTask({
+          const matrixTaskData = {
             gtdItemId: item.id,
             title,
             description,
             quadrant,
             urgency: urgency[0],
             importance: importance[0],
-            status: 'pending',
-            dueDate: dueDate ? new Date(dueDate) : undefined
-          });
+            status: 'pending' as const,
+            ...(dueDate && dueDate.trim() !== '' ? { dueDate: new Date(dueDate) } : {})
+          };
+          
+          await createEisenhowerTask(matrixTaskData);
           
           const quadrantInfo = getQuadrantInfo(quadrant);
           const gtdTypeLabel = gtdType === 'waiting-for' ? 'Aguardando Por' : 'Próximas Ações';

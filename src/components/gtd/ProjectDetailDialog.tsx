@@ -17,7 +17,8 @@ import {
   Edit,
   Trash2
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { GTDItem } from '@/lib/types';
 import { CreateActionDialog } from './CreateActionDialog';
 import { EditProjectDialog } from './EditProjectDialog';
@@ -37,7 +38,8 @@ export function ProjectDetailDialog({ project, open, onOpenChange }: ProjectDeta
   const [showEditProject, setShowEditProject] = useState(false);
   const [editingAction, setEditingAction] = useState<string | null>(null);
   
-  const { data: items, update, remove } = useGTDItems();
+  const { user } = useAuth();
+  const { data: items, update, remove } = useFirestoreGTD(user);
   
   // Filtrar ações relacionadas ao projeto
   const projectActions = items.filter(item => 

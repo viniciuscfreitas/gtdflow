@@ -19,7 +19,9 @@ import {
   Trophy,
   Zap
 } from 'lucide-react';
-import { useGTDItems, useEisenhowerTasks } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useCrossMethodologySync } from '@/lib/hooks/useCrossMethodologySync';
 import { useNotificationContext } from '@/lib/contexts/NotificationContext';
 import { GTDItem, EisenhowerTask } from '@/lib/types';
@@ -49,8 +51,9 @@ export function CompletedTasksHistory({ limit, showFilters = true }: CompletedTa
   const [periodFilter, setPeriodFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
 
-  const { data: gtdItems } = useGTDItems();
-  const { data: eisenhowerTasks } = useEisenhowerTasks();
+  const { user } = useAuth();
+  const { data: gtdItems } = useFirestoreGTD(user);
+  const { data: eisenhowerTasks } = useFirestoreMatrix(user);
   const { syncTaskCompletion } = useCrossMethodologySync();
   const { notifySuccess, notifyInfo } = useNotificationContext();
 

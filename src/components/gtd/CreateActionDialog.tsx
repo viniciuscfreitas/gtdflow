@@ -74,9 +74,9 @@ export function CreateActionDialog({ onClose, onSuccess, projectId }: CreateActi
         context: data.context,
         energy: data.energy || 'medium' as const,
         estimatedTime: data.estimatedTime,
-        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
         projectId: projectId,
         tags: [],
+        ...(data.dueDate && data.dueDate.trim() !== '' ? { dueDate: new Date(data.dueDate) } : {})
       };
       
       create(newAction);

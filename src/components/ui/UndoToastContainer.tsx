@@ -1,13 +1,16 @@
 'use client';
 
 import { useUndoToast, UndoToast } from './UndoToast';
-import { useEisenhowerTasks, useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { ActionHistory } from '@/lib/types';
 
 export function UndoToastContainer() {
   const { activeToasts, hideUndoToast, handleUndo } = useUndoToast();
-  const { update: updateEisenhowerTask } = useEisenhowerTasks();
-  const { update: updateGTDItem } = useGTDItems();
+  const { user } = useAuth();
+  const { update: updateEisenhowerTask } = useFirestoreMatrix(user);
+  const { update: updateGTDItem } = useFirestoreGTD(user);
 
   const handleUndoAction = async (historyId: string, historyEntry: ActionHistory) => {
     const undoCallback = async (previousState: Record<string, unknown>) => {

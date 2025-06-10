@@ -18,7 +18,8 @@ import {
   ArrowRight,
   Calendar
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { CreateProjectDialog } from './CreateProjectDialog';
 import { EditProjectDialog } from './EditProjectDialog';
 import { ProjectDetailDialog } from './ProjectDetailDialog';
@@ -26,7 +27,8 @@ import { toast } from 'sonner';
 import { GTDItem } from '@/lib/types';
 
 export function ProjectsList() {
-  const { data: gtdItems, remove } = useGTDItems();
+  const { user } = useAuth();
+  const { data: gtdItems, remove } = useFirestoreGTD(user);
   const [searchTerm, setSearchTerm] = useState('');
   // const [statusFilter, setStatusFilter] = useState('all');
   const [showCreateDialog, setShowCreateDialog] = useState(false);

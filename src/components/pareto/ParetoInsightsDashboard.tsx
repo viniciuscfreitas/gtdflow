@@ -16,7 +16,9 @@ import {
   Calendar,
   Zap
 } from 'lucide-react';
-import { useGTDItems, usePomodoroSessions } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestorePomodoro } from '@/lib/hooks/useFirestorePomodoro';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { subDays, startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -36,8 +38,11 @@ interface InsightMetrics {
 }
 
 export function ParetoInsightsDashboard() {
-  const { data: gtdItems } = useGTDItems();
-  const { data: pomodoroSessions } = usePomodoroSessions();
+  const { user } = useAuth();
+  const { data: gtdItems } = useFirestoreGTD(user);
+  const { sessions: pomodoroSessionsData } = useFirestorePomodoro(user);
+  
+  const pomodoroSessions = pomodoroSessionsData.data;
 
   // Calcular métricas avançadas
   const insights: InsightMetrics = useMemo(() => {

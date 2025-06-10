@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { GTDItem } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -23,7 +24,8 @@ export function EditProjectDialog({ project, open, onOpenChange }: EditProjectDi
   const [status, setStatus] = useState<'active' | 'completed' | 'cancelled'>('active');
   const [area, setArea] = useState('');
 
-  const { update } = useGTDItems();
+  const { user } = useAuth();
+  const { update } = useFirestoreGTD(user);
 
   useEffect(() => {
     if (project) {

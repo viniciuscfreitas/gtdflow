@@ -13,11 +13,15 @@ import {
   CheckCircle2,
   AlertTriangle
 } from 'lucide-react';
-import { useObjectives, useKeyResults } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreOKRs } from '@/lib/hooks/useFirestoreOKRs';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export function OKRsReports() {
-  const { data: objectives } = useObjectives();
-  const { data: keyResults } = useKeyResults();
+  const { user } = useAuth();
+  const { objectives: objectivesData, keyResults: keyResultsData } = useFirestoreOKRs(user);
+  
+  const objectives = objectivesData.data;
+  const keyResults = keyResultsData.data;
 
   // Generate detailed report data
   const reportData = useMemo(() => {

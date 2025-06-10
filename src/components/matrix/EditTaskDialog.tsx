@@ -83,7 +83,7 @@ export function EditTaskDialog({ task, open, onOpenChange }: EditTaskDialogProps
       urgency: urgency[0],
       importance: importance[0],
       status,
-      dueDate: dueDate ? new Date(dueDate) : undefined,
+              ...(dueDate && dueDate.trim() !== '' ? { dueDate: new Date(dueDate) } : {}),
       updatedAt: new Date(),
     };
 

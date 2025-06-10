@@ -87,7 +87,7 @@ export function EditActionDialog({ actionId, onClose, onSuccess }: EditActionDia
         context: data.context,
         energy: data.energy,
         estimatedTime: data.estimatedTime,
-        dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+        ...(data.dueDate && data.dueDate.trim() !== '' ? { dueDate: new Date(data.dueDate) } : {}),
       };
       
       update(actionId, updatedAction);

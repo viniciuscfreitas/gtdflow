@@ -17,10 +17,12 @@ import { ProjectsList } from '@/components/gtd/ProjectsList';
 import { WaitingForList } from '@/components/gtd/WaitingForList';
 import { SomedayMaybeList } from '@/components/gtd/SomedayMaybeList';
 import { ReferenceList } from '@/components/gtd/ReferenceList';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 
 export default function GTDPage() {
-  const { data: gtdItems } = useGTDItems();
+  const { user } = useAuth();
+  const { data: gtdItems } = useFirestoreGTD(user);
   const [activeTab, setActiveTab] = useState('inbox');
 
   // Statistics

@@ -13,7 +13,8 @@ import {
   Edit,
   AlertCircle
 } from 'lucide-react';
-import { useObjectives } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreOKRs } from '@/lib/hooks/useFirestoreOKRs';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { KeyResultsList } from './KeyResultsList';
 
 interface ObjectiveDetailProps {
@@ -22,7 +23,10 @@ interface ObjectiveDetailProps {
 }
 
 export function ObjectiveDetail({ objectiveId, onBack }: ObjectiveDetailProps) {
-  const { getById } = useObjectives();
+  const { user } = useAuth();
+  const { objectives } = useFirestoreOKRs(user);
+  
+  const getById = (id: string) => objectives.data.find((obj: any) => obj.id === id);
   const [isEditing, setIsEditing] = useState(false);
 
   const objective = getById(objectiveId);

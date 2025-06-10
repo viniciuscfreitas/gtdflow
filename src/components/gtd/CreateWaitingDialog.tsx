@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { GTDItem } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -24,7 +25,8 @@ export function CreateWaitingDialog({ trigger }: CreateWaitingDialogProps) {
   const [energy, setEnergy] = useState<'low' | 'medium' | 'high'>('medium');
 
 
-  const { create } = useGTDItems();
+  const { user } = useAuth();
+  const { create } = useFirestoreGTD(user);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

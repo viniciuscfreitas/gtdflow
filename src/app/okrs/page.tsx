@@ -7,7 +7,8 @@ import { Target, TrendingUp, MoreHorizontal, BarChart3, FileText } from 'lucide-
 import { ObjectivesList } from '@/components/okrs/ObjectivesList';
 import { OKRsDashboard } from '@/components/okrs/OKRsDashboard';
 import { OKRsReports } from '@/components/okrs/OKRsReports';
-import { useObjectives } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreOKRs } from '@/lib/hooks/useFirestoreOKRs';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import type { Objective, KeyResult } from '@/lib/types';
 
 // Função auxiliar para garantir que um valor seja um número válido
@@ -28,7 +29,8 @@ const calculateKeyResultProgress = (kr: KeyResult): number => {
 };
 
 export default function OKRsPage() {
-  const { data: objectives, isLoading } = useObjectives();
+  const { user } = useAuth();
+  const { objectives, isLoading } = useFirestoreOKRs(user);
   const [currentView, setCurrentView] = useState<'list' | 'dashboard' | 'reports'>('list');
 
   // Validate and sanitize data

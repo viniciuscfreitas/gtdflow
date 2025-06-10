@@ -18,7 +18,8 @@ import {
   FileText,
   Tag
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 import { GTDItem } from '@/lib/types';
 
@@ -39,7 +40,8 @@ interface EditReferenceDialogProps {
 }
 
 export function EditReferenceDialog({ referenceId, onClose, onSuccess }: EditReferenceDialogProps) {
-  const { data: gtdItems, update } = useGTDItems();
+  const { user } = useAuth();
+  const { data: gtdItems, update } = useFirestoreGTD(user);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const reference = gtdItems.find((item: GTDItem) => item.id === referenceId);

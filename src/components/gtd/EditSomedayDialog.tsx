@@ -19,7 +19,8 @@ import {
   Tag,
   Lightbulb
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 import { GTDItem } from '@/lib/types';
 
@@ -39,7 +40,8 @@ interface EditSomedayDialogProps {
 }
 
 export function EditSomedayDialog({ somedayId, onClose, onSuccess }: EditSomedayDialogProps) {
-  const { data: gtdItems, update } = useGTDItems();
+  const { user } = useAuth();
+  const { data: gtdItems, update } = useFirestoreGTD(user);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const somedayItem = gtdItems.find((item: GTDItem) => item.id === somedayId);

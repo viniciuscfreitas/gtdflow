@@ -7,14 +7,19 @@ import { BarChart3, Star } from 'lucide-react';
 import { ParetoAnalysis } from '@/components/pareto/ParetoAnalysis';
 import { ParetoChart } from '@/components/pareto/ParetoChart';
 import { ParetoInsightsDashboard } from '@/components/pareto/ParetoInsightsDashboard';
-import { useGTDItems, usePomodoroSessions } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestorePomodoro } from '@/lib/hooks/useFirestorePomodoro';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useMemo } from 'react';
 import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function ParetoPage() {
-  const { data: gtdItems } = useGTDItems();
-  const { data: pomodoroSessions } = usePomodoroSessions();
+  const { user } = useAuth();
+  const { data: gtdItems } = useFirestoreGTD(user);
+  const { sessions: pomodoroSessionsData } = useFirestorePomodoro(user);
+  
+  const pomodoroSessions = pomodoroSessionsData.data;
   const [activeTab, setActiveTab] = useState('analysis');
 
   // Preparar dados para gráficos
