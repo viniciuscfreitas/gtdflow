@@ -11,7 +11,7 @@ interface AuthWrapperProps {
 }
 
 // Rotas que não precisam de autenticação
-const publicRoutes = ['/auth/login', '/auth/register'];
+const publicRoutes = ['/', '/auth/login', '/auth/register'];
 
 export function AuthWrapper({ children }: AuthWrapperProps) {
   const { user, loading } = useAuth();
@@ -60,6 +60,11 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
   // (o useEffect vai redirecionar)
   if (user && isPublicRoute) {
     return null;
+  }
+
+  // Landing page não usa MainLayout
+  if (pathname === '/' && !user) {
+    return <>{children}</>;
   }
 
   return (

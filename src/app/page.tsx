@@ -344,13 +344,17 @@ function Dashboard() {
 
   const needsAttention = stats.inbox > 0;
 
-  const totalActiveTasks = stats.inbox + stats.nextActions + stats.matrixTasks;
-  const projects = new Set(
-    gtdItems
-      .filter(item => item.projectId && item.projectId.trim())
-      .map(item => item.projectId)
-  );
-  const totalProjects = projects.size;
+  // const totalActiveTasks = stats.inbox + stats.nextActions + stats.matrixTasks;
+  // const projects = new Set(
+  //   gtdItems
+  //     .filter(item => item.projectId && item.projectId.trim())
+  //     .map(item => item.projectId)
+  // );
+  // const totalProjects = projects.size;
+
+  // 🧪 TESTE: Simular 95 tasks para testar warning banner
+  const mockTaskCount = 95; // Mude para 50 para não mostrar banner
+  const mockProjectCount = 3; // Mude para 1 para não mostrar banner
 
   return (
     <div className="py-6 space-y-6 max-w-4xl mx-auto">
@@ -358,8 +362,8 @@ function Dashboard() {
       <QuickCapture />
 
       {/* Upgrade Banners - Strategic Friction */}
-      <TaskLimitBanner currentTasks={totalActiveTasks} />
-      <ProjectLimitBanner currentProjects={totalProjects} />
+      <TaskLimitBanner currentTasks={mockTaskCount} />
+      <ProjectLimitBanner currentProjects={mockProjectCount} />
 
       {/* Estatísticas Essenciais */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
