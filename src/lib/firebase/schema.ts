@@ -401,21 +401,45 @@ export const FIRESTORE_COLLECTIONS = {
 // ============================================================================
 
 /**
+ * Remove campos undefined de um objeto (Firestore não aceita undefined)
+ */
+function removeUndefinedFields(obj: Record<string, unknown>): Record<string, unknown> {
+  const cleaned: Record<string, unknown> = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+        // Recursivamente limpar objetos aninhados
+        cleaned[key] = removeUndefinedFields(value as Record<string, unknown>);
+      } else {
+        cleaned[key] = value;
+      }
+    }
+  }
+  
+  return cleaned;
+}
+
+/**
  * Mapeia entidade local para Firestore
  */
 export function mapLocalToFirestore<T extends BaseEntity>(
   localEntity: T,
   deviceId: string
 ): FirestoreBaseEntity {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { userId, ...entityWithoutUserId } = localEntity;
   
-  return {
+  const firestoreEntity = {
     ...entityWithoutUserId,
     syncVersion: 1,
     deviceId,
     lastSyncedAt: new Date(),
     isDeleted: false,
   };
+  
+  // Remove campos undefined que causam erro no Firestore
+  return removeUndefinedFields(firestoreEntity) as unknown as FirestoreBaseEntity;
 }
 
 /**
@@ -425,15 +449,14 @@ export function mapFirestoreToLocal<T extends FirestoreBaseEntity>(
   firestoreEntity: T,
   userId: string
 ): BaseEntity {
-  const { 
-    syncVersion: _syncVersion, 
-    deviceId: _deviceId, 
-    lastSyncedAt: _lastSyncedAt, 
-    conflictResolution: _conflictResolution,
-    isDeleted: _isDeleted,
-    deletedAt: _deletedAt,
-    ...localEntity 
-  } = firestoreEntity;
+  // Remove campos específicos do Firestore
+  const localEntity = { ...firestoreEntity };
+  delete (localEntity as any).syncVersion;
+  delete (localEntity as any).deviceId;
+  delete (localEntity as any).lastSyncedAt;
+  delete (localEntity as any).conflictResolution;
+  delete (localEntity as any).isDeleted;
+  delete (localEntity as any).deletedAt;
   
   return {
     ...localEntity,
