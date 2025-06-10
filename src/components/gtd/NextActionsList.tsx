@@ -310,7 +310,7 @@ export function NextActionsList() {
                   </h4>
                   
                   {action.description && (
-                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                    <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap break-words">
                       {action.description}
                     </p>
                   )}

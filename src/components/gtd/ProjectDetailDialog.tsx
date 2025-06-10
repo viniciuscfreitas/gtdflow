@@ -236,7 +236,7 @@ export function ProjectDetailDialog({ project, open, onOpenChange }: ProjectDeta
                         <div className="flex-1 min-w-0">
                           <h4 className="font-medium text-sm">{action.title}</h4>
                           {action.description && (
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words">
                               {action.description}
                             </p>
                           )}

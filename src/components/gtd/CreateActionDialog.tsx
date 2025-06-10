@@ -30,7 +30,7 @@ import { toast } from 'sonner';
 const CreateActionSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
   description: z.string().optional(),
-  context: z.string().optional(),
+  context: z.string().min(1, 'Contexto é obrigatório'),
   energy: z.enum(['low', 'medium', 'high']),
   estimatedTime: z.number().optional(),
   dueDate: z.string().optional(),
@@ -60,6 +60,7 @@ export function CreateActionDialog({ onClose, onSuccess, projectId }: CreateActi
     resolver: zodResolver(CreateActionSchema),
     defaultValues: {
       energy: 'medium',
+      context: '',
     },
   });
 
@@ -131,9 +132,9 @@ export function CreateActionDialog({ onClose, onSuccess, projectId }: CreateActi
 
           {/* Context */}
           <div className="space-y-2">
-            <Label htmlFor="context">Contexto</Label>
-            <Select onValueChange={(value) => setValue('context', value)}>
-              <SelectTrigger>
+            <Label htmlFor="context">Contexto *</Label>
+            <Select onValueChange={(value) => setValue('context', value)} {...register('context')}>
+              <SelectTrigger className={errors.context ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Onde/quando fazer esta ação?" />
               </SelectTrigger>
               <SelectContent>
@@ -147,6 +148,9 @@ export function CreateActionDialog({ onClose, onSuccess, projectId }: CreateActi
                 <SelectItem value="@anywhere">@qualquer lugar</SelectItem>
               </SelectContent>
             </Select>
+            {errors.context && (
+              <p className="text-sm text-red-500">{errors.context.message}</p>
+            )}
             <p className="text-xs text-muted-foreground">
               Contexto ajuda a agrupar ações por local ou situação
             </p>
