@@ -1,103 +1,172 @@
-import Image from "next/image";
+'use client';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { 
+  CheckSquare, 
+  Grid3X3, 
+  ArrowRight,
+  CheckCircle2
+} from 'lucide-react';
+import Link from 'next/link';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { QuickCapture } from '@/components/gtd/QuickCapture';
+import { CompletedTasksHistory } from '@/components/ui/CompletedTasksHistory';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const { user } = useAuth();
+  const { data: gtdItems } = useFirestoreGTD(user);
+  const { data: eisenhowerTasks } = useFirestoreMatrix(user);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  // Estatísticas essenciais
+  const stats = {
+    inbox: gtdItems.filter(item => item.type === 'inbox').length,
+    nextActions: gtdItems.filter(item => item.type === 'next-action' && item.status === 'active').length,
+    waiting: gtdItems.filter(item => item.type === 'waiting-for' && item.status === 'active').length,
+    matrixTasks: eisenhowerTasks.filter(task => task.status === 'pending').length,
+    completedToday: eisenhowerTasks.filter(task => 
+      task.status === 'completed' && 
+      task.completedAt && 
+      new Date(task.completedAt).toDateString() === new Date().toDateString()
+    ).length
+  };
+
+  const needsAttention = stats.inbox > 0;
+
+  return (
+    <div className="py-6 space-y-6 max-w-4xl mx-auto">
+      {/* Captura Rápida */}
+      <QuickCapture />
+
+      {/* Estatísticas Essenciais */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <Link href="/gtd">
+          <Card className={`cursor-pointer transition-all hover:shadow-md ${needsAttention ? 'ring-2 ring-orange-200 bg-orange-50' : 'hover:bg-muted/50'}`}>
+            <CardContent className="pt-4 text-center">
+              <div className="text-2xl font-bold text-orange-600">{stats.inbox}</div>
+              <div className="text-sm font-medium">Inbox</div>
+              {needsAttention && (
+                <div className="text-xs text-orange-700 mt-1">Processar</div>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/gtd">
+          <Card className="cursor-pointer transition-all hover:shadow-md hover:bg-muted/50">
+            <CardContent className="pt-4 text-center">
+              <div className="text-2xl font-bold text-green-600">{stats.nextActions}</div>
+              <div className="text-sm font-medium">Ações</div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/gtd">
+          <Card className="cursor-pointer transition-all hover:shadow-md hover:bg-muted/50">
+            <CardContent className="pt-4 text-center">
+              <div className="text-2xl font-bold text-yellow-600">{stats.waiting}</div>
+              <div className="text-sm font-medium">Aguardando</div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/matrix">
+          <Card className="cursor-pointer transition-all hover:shadow-md hover:bg-muted/50">
+            <CardContent className="pt-4 text-center">
+              <div className="text-2xl font-bold text-blue-600">{stats.matrixTasks}</div>
+              <div className="text-sm font-medium">Matriz</div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/completed">
+          <Card className="cursor-pointer transition-all hover:shadow-md bg-green-50 border-green-200 hover:border-green-300">
+            <CardContent className="pt-4 text-center">
+              <div className="text-2xl font-bold text-green-600">{stats.completedToday}</div>
+              <div className="text-sm font-medium">Hoje</div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Ações Rápidas */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link href="/gtd">
+          <Card className="cursor-pointer transition-all hover:shadow-md border-green-200 hover:border-green-300">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckSquare className="h-8 w-8 text-green-600" />
+                  <div>
+                    <h3 className="font-semibold">GTD</h3>
+                    <p className="text-sm text-muted-foreground">Organizar tarefas</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/matrix">
+          <Card className="cursor-pointer transition-all hover:shadow-md border-blue-200 hover:border-blue-300">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Grid3X3 className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <h3 className="font-semibold">Matriz</h3>
+                    <p className="text-sm text-muted-foreground">Priorizar tarefas</p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Alerta de Ação (apenas se necessário) */}
+      {needsAttention && (
+        <Card className="bg-orange-50 border-orange-200">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-orange-900">
+                  {stats.inbox} item{stats.inbox !== 1 ? 's' : ''} no inbox
+                </p>
+                <p className="text-sm text-orange-700">Processe para manter clareza mental</p>
+              </div>
+              <Link href="/gtd">
+                <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
+                  Processar
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Preview de Tarefas Concluídas Recentes */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <h3 className="font-semibold">Conquistas Recentes</h3>
+            </div>
+            <Link href="/completed">
+              <Button variant="outline" size="sm">
+                Ver Todas
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+          <CompletedTasksHistory limit={3} showFilters={false} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

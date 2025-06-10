@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# gtd
 
-## Getting Started
+Projeto criado com a stack completa do v0.dev.
 
-First, run the development server:
+## 🚀 Stack Tecnológica
+
+### Frontend
+
+- **Next.js 15** - App Router, Server Components, Turbopack
+- **React 19** - Últimas funcionalidades e hooks
+- **TypeScript 5** - Tipagem estática avançada
+- **Tailwind CSS v4** - Styling utilitário moderno
+- **Shadcn/ui** - Componentes acessíveis e customizáveis
+- **Radix UI** - Primitivos de UI robustos
+- **Lucide React** - Ícones modernos e otimizados
+
+### Bibliotecas Incluídas
+
+- **React Query** - Gerenciamento de estado e cache
+- **Next Auth** - Autenticação robusta
+- **Zod + React Hook Form** - Validação de formulários
+- **Framer Motion** - Animações fluidas
+- **Axios** - Requisições HTTP
+- **React Hot Toast** - Notificações elegantes
+
+### Desenvolvimento
+
+- **Jest + Testing Library** - Testes unitários
+- **ESLint + Prettier** - Qualidade de código
+- **TypeScript strict mode** - Máxima segurança de tipos
+
+## 🛠️ Scripts Disponíveis
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Desenvolvimento
+npm run dev          # Servidor de desenvolvimento
+npm run build        # Build de produção
+npm run start        # Servidor de produção
+
+# Qualidade de código
+npm run lint         # ESLint
+npm run lint:fix     # Corrige problemas automaticamente
+npm run format       # Formata código com Prettier
+npm run type-check   # Verifica tipos TypeScript
+
+# Testes
+npm test             # Executa testes
+npm run test:watch   # Testes em modo watch
+npm run test:coverage # Cobertura de testes
+
+# Utilitários
+npm run clean        # Limpa arquivos de build
+npm run analyze      # Analisa bundle size
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 Componentes Inclusos
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Básicos**: Button, Card, Input, Label
+- **Navegação**: Navigation Menu, Menubar, Context Menu
+- **Layouts**: Dialog, Sheet, Accordion, Tabs, Table
+- **Feedback**: Progress, Skeleton, Sonner (Toast), Alert Dialog
+- **Formulários**: Form, Select, Checkbox, Radio Group, Slider, Switch
+- **Dados**: Calendar, Avatar, Badge, Separator, Scroll Area
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Como usar
 
-## Learn More
+1. **Instalar dependências:**
 
-To learn more about Next.js, take a look at the following resources:
+   ```bash
+   npm install
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. **Iniciar desenvolvimento:**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```bash
+   npm run dev
+   ```
 
-## Deploy on Vercel
+3. **Adicionar componentes:**
+   ```bash
+   npx shadcn@latest add [component-name]
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📁 Estrutura do Projeto
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+gtd/
+├── src/
+│   ├── app/                 # App Router (Next.js 15)
+│   │   └── ui/             # Componentes Shadcn/ui
+│   └── lib/                # Utilitários e configurações
+├── public/                 # Arquivos estáticos
+├── components.json         # Configuração Shadcn/ui
+├── tailwind.config.js      # Configuração Tailwind
+└── tsconfig.json          # Configuração TypeScript
+```
+
+## 📖 Próximos Passos
+
+1. Configure variáveis de ambiente no `.env`
+2. Adicione mais componentes: `npx shadcn@latest add [component]`
+3. Configure autenticação com Next Auth
+4. Para Sentry: `npx @sentry/wizard@latest -i nextjs`
+5. Deploy na Vercel: `vercel --prod`
+
+---
+
+Criado com ❤️ usando a stack v0.dev
