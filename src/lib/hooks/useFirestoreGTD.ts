@@ -58,11 +58,11 @@ export function useFirestoreGTD(user: User | null) {
 
     const q = query(
       gtdCollectionRef,
-      where('isDeleted', '!=', true),
+      where('isDeleted', '==', false),
       orderBy('createdAt', 'desc')
     );
 
-    console.log('🔍 DEBUG: Query configurada para filtrar isDeleted != true');
+    console.log('🔍 DEBUG: Query corrigida para filtrar isDeleted == false');
 
     const unsubscribe = onSnapshot(
       q,
@@ -80,6 +80,12 @@ export function useFirestoreGTD(user: User | null) {
               hasIsDeletedField: 'isDeleted' in data,
               title: data.title
             });
+            
+            // Filtro adicional de segurança
+            if (data.isDeleted === true) {
+              console.log(`🔍 DEBUG: Ignorando documento deletado: ${doc.id}`);
+              return;
+            }
             
             // Converter timestamps Firestore para Date
             const item: GTDItem = {

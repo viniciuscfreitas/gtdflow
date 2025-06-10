@@ -58,6 +58,7 @@ export function useFirestoreMatrix(user: User | null) {
 
     const q = query(
       matrixCollectionRef,
+      where('isDeleted', '==', false),
       orderBy('createdAt', 'desc')
     );
 

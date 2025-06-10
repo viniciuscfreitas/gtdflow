@@ -99,8 +99,9 @@ export class FirebaseSyncService {
       // 2. Download de mudanças remotas
       const downloadResult = await this.downloadRemoteChanges();
       
-      // 3. Limpeza de itens deletados há mais de 30 dias
-      await this.cleanupOldDeletedItems();
+      // 3. Limpeza de itens deletados há mais de 30 dias - TEMPORARIAMENTE DESABILITADA
+      // await this.cleanupOldDeletedItems();
+      console.log('⚠️ Limpeza automática desabilitada temporariamente devido a problemas de índice');
       
       // 4. Atualizar metadados de sincronização
       const currentMetadata = await this.getSyncMetadata();
