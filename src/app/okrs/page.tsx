@@ -10,6 +10,7 @@ import { OKRsReports } from '@/components/okrs/OKRsReports';
 import { useFirestoreOKRs } from '@/lib/hooks/useFirestoreOKRs';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { Objective, KeyResult } from '@/lib/types';
+import { PremiumFeatureBanner } from '@/components/ui/UpgradeBanner';
 
 // Função auxiliar para garantir que um valor seja um número válido
 const safeNumber = (value: unknown, fallback: number = 0): number => {
@@ -32,6 +33,9 @@ export default function OKRsPage() {
   const { user } = useAuth();
   const { objectives, isLoading } = useFirestoreOKRs(user);
   const [currentView, setCurrentView] = useState<'list' | 'dashboard' | 'reports'>('list');
+  
+  // Mock subscription check - replace with real subscription hook later
+  const isPro = false; // Everyone starts as free for now
 
   // Validate and sanitize data
   const validObjectives = useMemo(() => {
@@ -75,6 +79,27 @@ export default function OKRsPage() {
     }, 0);
     
     averageProgress = Math.round(safeNumber(totalProgress / validObjectives.length, 0));
+  }
+
+  // Show premium banner for free users
+  if (!isPro) {
+    return (
+      <div className="py-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Target className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">OKRs - Estratégia</h1>
+            <p className="text-muted-foreground">
+              Defina objetivos e resultados-chave para direcionar seu foco
+            </p>
+          </div>
+        </div>
+
+        {/* Premium Feature Banner */}
+        <PremiumFeatureBanner feature="okrs" />
+      </div>
+    );
   }
 
   return (

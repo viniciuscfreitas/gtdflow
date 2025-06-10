@@ -13,14 +13,18 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { useMemo } from 'react';
 import { startOfWeek, endOfWeek, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { PremiumFeatureBanner } from '@/components/ui/UpgradeBanner';
 
 export default function ParetoPage() {
   const { user } = useAuth();
   const { data: gtdItems } = useFirestoreGTD(user);
   const { sessions: pomodoroSessionsData } = useFirestorePomodoro(user);
+  const [activeTab, setActiveTab] = useState('analysis');
+  
+  // Mock subscription check - replace with real subscription hook later
+  const isPro = false; // Everyone starts as free for now
   
   const pomodoroSessions = pomodoroSessionsData.data;
-  const [activeTab, setActiveTab] = useState('analysis');
 
   // Preparar dados para gráficos
   const chartData = useMemo(() => {
@@ -79,6 +83,27 @@ export default function ParetoPage() {
       };
     });
   }, [gtdItems, pomodoroSessions]);
+
+  // Show premium banner for free users
+  if (!isPro) {
+    return (
+      <div className="py-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <BarChart3 className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Princípio de Pareto</h1>
+            <p className="text-muted-foreground">
+              Análise 80/20 - Identifique as atividades de maior impacto
+            </p>
+          </div>
+        </div>
+
+        {/* Premium Feature Banner */}
+        <PremiumFeatureBanner feature="pareto" />
+      </div>
+    );
+  }
 
   return (
     <div className="py-6 space-y-6">

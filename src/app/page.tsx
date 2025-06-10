@@ -18,6 +18,7 @@ import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { QuickCapture } from '@/components/gtd/QuickCapture';
 import { CompletedTasksHistory } from '@/components/ui/CompletedTasksHistory';
+import { TaskLimitBanner, ProjectLimitBanner } from '@/components/ui/UpgradeBanner';
 
 // Landing Page Component for non-logged users
 function LandingPage() {
@@ -343,10 +344,22 @@ function Dashboard() {
 
   const needsAttention = stats.inbox > 0;
 
+  const totalActiveTasks = stats.inbox + stats.nextActions + stats.matrixTasks;
+  const projects = new Set(
+    gtdItems
+      .filter(item => item.projectId && item.projectId.trim())
+      .map(item => item.projectId)
+  );
+  const totalProjects = projects.size;
+
   return (
     <div className="py-6 space-y-6 max-w-4xl mx-auto">
       {/* Captura Rápida */}
       <QuickCapture />
+
+      {/* Upgrade Banners - Strategic Friction */}
+      <TaskLimitBanner currentTasks={totalActiveTasks} />
+      <ProjectLimitBanner currentProjects={totalProjects} />
 
       {/* Estatísticas Essenciais */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

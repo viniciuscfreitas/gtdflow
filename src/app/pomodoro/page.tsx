@@ -9,8 +9,12 @@ import { SessionHistory } from '@/components/pomodoro/SessionHistory';
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 import { PomodoroSession, GTDItem } from '@/lib/types';
 import { toast } from 'sonner';
+import { PremiumFeatureBanner } from '@/components/ui/UpgradeBanner';
 
 export default function PomodoroPage() {
+  // Mock subscription check - replace with real subscription hook later
+  const isPro = false; // Everyone starts as free for now
+  
   // Estados
   const [selectedTask, setSelectedTask] = useState<{ id: string; title: string } | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -176,6 +180,27 @@ export default function PomodoroPage() {
       }
     }
   }, [activeSessionId, sessions]);
+
+  // Show premium banner for free users
+  if (!isPro) {
+    return (
+      <div className="py-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Timer className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Método Pomodoro</h1>
+            <p className="text-muted-foreground">
+              Técnica de foco - 25 minutos de trabalho, 5 minutos de pausa
+            </p>
+          </div>
+        </div>
+
+        {/* Premium Feature Banner */}
+        <PremiumFeatureBanner feature="pomodoro" />
+      </div>
+    );
+  }
 
   return (
     <div className="py-6 space-y-6">
