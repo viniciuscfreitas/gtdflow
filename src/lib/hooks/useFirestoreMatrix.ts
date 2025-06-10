@@ -18,7 +18,8 @@ import {
   serverTimestamp,
   query,
   orderBy,
-  where
+  where,
+  increment
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import { FIRESTORE_COLLECTIONS } from '@/lib/firebase/schema';
@@ -168,6 +169,9 @@ export function useFirestoreMatrix(user: User | null) {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
+      // Optimistic update - remove imediatamente da UI
+      setData(prevData => prevData.filter(task => task.id !== id));
+
       const docRef = doc(db, FIRESTORE_COLLECTIONS.USERS, user.uid, FIRESTORE_COLLECTIONS.EISENHOWER_TASKS, id);
       
       // Soft delete para sincronização
@@ -175,12 +179,20 @@ export function useFirestoreMatrix(user: User | null) {
         isDeleted: true,
         deletedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        syncVersion: increment(1), // Incrementar versão para evitar conflitos
       });
 
       return true;
     } catch (err) {
+      // Reverter optimistic update em caso de erro
+      setError('Erro ao deletar tarefa. Recarregando...');
+      
+      // Recarregar dados para reverter o optimistic update
+      setTimeout(() => {
+        setError(null);
+      }, 2000);
+      
       const errorMessage = err instanceof Error ? err.message : 'Erro ao deletar tarefa';
-      setError(errorMessage);
       throw new Error(errorMessage);
     }
   }, [user]);

@@ -14,7 +14,9 @@ import {
   updateDoc, 
   onSnapshot,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  query,
+  where
 } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { db } from './config';
@@ -97,7 +99,10 @@ export class FirebaseSyncService {
       // 2. Download de mudanças remotas
       const downloadResult = await this.downloadRemoteChanges();
       
-      // 3. Atualizar metadados de sincronização
+      // 3. Limpeza de itens deletados há mais de 30 dias
+      await this.cleanupOldDeletedItems();
+      
+      // 4. Atualizar metadados de sincronização
       const currentMetadata = await this.getSyncMetadata();
       await this.updateSyncMetadata({
         lastFullSync: new Date(),
@@ -506,6 +511,65 @@ export class FirebaseSyncService {
       lastActiveAt: new Date(),
       ...updates,
     }, { merge: true });
+  }
+
+  // ============================================================================
+  // CLEANUP OPERATIONS
+  // ============================================================================
+
+  /**
+   * Remove permanentemente itens deletados há mais de 30 dias
+   */
+  private async cleanupOldDeletedItems(): Promise<void> {
+    if (!this.user) return;
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const collections = [
+      FIRESTORE_COLLECTIONS.GTD_ITEMS,
+      FIRESTORE_COLLECTIONS.GTD_PROJECTS,
+      FIRESTORE_COLLECTIONS.EISENHOWER_TASKS,
+      FIRESTORE_COLLECTIONS.OBJECTIVES,
+      FIRESTORE_COLLECTIONS.KEY_RESULTS,
+      FIRESTORE_COLLECTIONS.POMODORO_SESSIONS,
+      FIRESTORE_COLLECTIONS.POMODORO_STATS,
+      FIRESTORE_COLLECTIONS.PARETO_ANALYSES,
+      FIRESTORE_COLLECTIONS.CALENDAR_EVENTS,
+      FIRESTORE_COLLECTIONS.ACTION_HISTORY,
+    ];
+
+    for (const collectionName of collections) {
+      try {
+        const collectionRef = collection(db, FIRESTORE_COLLECTIONS.USERS, this.user.uid, collectionName);
+        const q = query(
+          collectionRef,
+          where('isDeleted', '==', true),
+          where('deletedAt', '<=', thirtyDaysAgo)
+        );
+        
+        const snapshot = await getDocs(q);
+        
+        // Deletar documentos em lotes para performance
+        const batch: any[] = [];
+        snapshot.forEach((docSnapshot) => {
+          batch.push(docSnapshot.ref);
+        });
+
+        // Deletar em lotes de 500 (limite do Firestore)
+        for (let i = 0; i < batch.length; i += 500) {
+          const batchSlice = batch.slice(i, i + 500);
+          await Promise.all(batchSlice.map(ref => ref.delete()));
+        }
+
+        if (batch.length > 0) {
+          console.log(`🧹 Limpeza: ${batch.length} itens removidos permanentemente de ${collectionName}`);
+        }
+      } catch (error) {
+        console.warn(`Erro na limpeza de ${collectionName}:`, error);
+        // Continuar com outras coleções mesmo se uma falhar
+      }
+    }
   }
 
   // ============================================================================

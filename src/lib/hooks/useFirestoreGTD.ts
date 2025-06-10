@@ -110,16 +110,19 @@ export function useFirestoreGTD(user: User | null) {
   const create = useCallback(async (item: Omit<GTDItem, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
     if (!user) throw new Error('Usuário não autenticado');
 
+    const docRef = doc(collection(db, FIRESTORE_COLLECTIONS.USERS, user.uid, FIRESTORE_COLLECTIONS.GTD_ITEMS));
+    
     try {
-      const docRef = doc(collection(db, FIRESTORE_COLLECTIONS.USERS, user.uid, FIRESTORE_COLLECTIONS.GTD_ITEMS));
-      
-      const newItem: Partial<GTDItem> = {
+      const newItem: GTDItem = {
         ...item,
         id: docRef.id,
         userId: user.uid,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
+
+      // Optimistic update - adiciona imediatamente na UI
+      setData(prevData => [newItem, ...prevData]);
 
       await setDoc(docRef, {
         ...newItem,
@@ -129,11 +132,17 @@ export function useFirestoreGTD(user: User | null) {
         syncVersion: 1,
       });
 
-      // Retornar item com ID para compatibilidade
-      return { ...newItem, id: docRef.id } as GTDItem;
+      return newItem;
     } catch (err) {
+      // Reverter optimistic update em caso de erro
+      setData(prevData => prevData.filter(existingItem => existingItem.id !== docRef.id));
+      setError('Erro ao criar item. Tente novamente.');
+      
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
+      
       const errorMessage = err instanceof Error ? err.message : 'Erro ao criar item';
-      setError(errorMessage);
       throw new Error(errorMessage);
     }
   }, [user]);
@@ -141,7 +150,19 @@ export function useFirestoreGTD(user: User | null) {
   const update = useCallback(async (id: string, updates: Partial<Omit<GTDItem, 'id' | 'createdAt' | 'userId'>>) => {
     if (!user) throw new Error('Usuário não autenticado');
 
+    // Salvar estado anterior para possível rollback
+    const previousData = data;
+    
     try {
+      // Optimistic update - atualiza imediatamente na UI
+      setData(prevData => 
+        prevData.map(item => 
+          item.id === id 
+            ? { ...item, ...updates, updatedAt: new Date() }
+            : item
+        )
+      );
+
       const docRef = doc(db, FIRESTORE_COLLECTIONS.USERS, user.uid, FIRESTORE_COLLECTIONS.GTD_ITEMS, id);
       
       await updateDoc(docRef, {
@@ -151,15 +172,22 @@ export function useFirestoreGTD(user: User | null) {
       });
 
       // Retornar item atualizado para compatibilidade
-      const existingItem = data.find(item => item.id === id);
+      const existingItem = previousData.find(item => item.id === id);
       if (existingItem) {
         return { ...existingItem, ...updates, updatedAt: new Date() } as GTDItem;
       }
       
       return null;
     } catch (err) {
+      // Reverter optimistic update em caso de erro
+      setData(previousData);
+      setError('Erro ao atualizar item. Recarregando...');
+      
+      setTimeout(() => {
+        setError(null);
+      }, 2000);
+      
       const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar item';
-      setError(errorMessage);
       throw new Error(errorMessage);
     }
   }, [user, data]);
@@ -168,6 +196,9 @@ export function useFirestoreGTD(user: User | null) {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
+      // Optimistic update - remove imediatamente da UI
+      setData(prevData => prevData.filter(item => item.id !== id));
+
       const docRef = doc(db, FIRESTORE_COLLECTIONS.USERS, user.uid, FIRESTORE_COLLECTIONS.GTD_ITEMS, id);
       
       // Soft delete para sincronização
@@ -175,12 +206,20 @@ export function useFirestoreGTD(user: User | null) {
         isDeleted: true,
         deletedAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
+        syncVersion: increment(1), // Incrementar versão para evitar conflitos
       });
 
       return true;
     } catch (err) {
+      // Reverter optimistic update em caso de erro
+      setError('Erro ao deletar item. Recarregando...');
+      
+      // Recarregar dados para reverter o optimistic update
+      setTimeout(() => {
+        setError(null);
+      }, 2000);
+      
       const errorMessage = err instanceof Error ? err.message : 'Erro ao deletar item';
-      setError(errorMessage);
       throw new Error(errorMessage);
     }
   }, [user]);
