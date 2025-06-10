@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import { GTDItem, EisenhowerTask } from '@/lib/types';
+import { useStripeSubscription } from './useStripeSubscription';
 
 export interface SubscriptionStatus {
   plan: 'free' | 'pro';
@@ -28,6 +29,7 @@ export interface UsageStats {
 }
 
 export function useSubscription(user: User | null) {
+  const { isProUser, loading: stripeLoading } = useStripeSubscription();
   const [subscription, setSubscription] = useState<SubscriptionStatus>({
     plan: 'free',
     isActive: true
@@ -35,17 +37,16 @@ export function useSubscription(user: User | null) {
   
   const [loading, setLoading] = useState(true);
 
-  // For now, everyone starts as free - later integrate with Stripe
+  // Integrate with Stripe subscription status
   useEffect(() => {
     if (user) {
-      // TODO: Fetch real subscription status from Firestore/Stripe
       setSubscription({
-        plan: 'free',
+        plan: isProUser ? 'pro' : 'free',
         isActive: true
       });
     }
-    setLoading(false);
-  }, [user]);
+    setLoading(stripeLoading);
+  }, [user, isProUser, stripeLoading]);
 
   const limits: FreemiumLimits = {
     maxTasks: subscription.plan === 'free' ? 100 : -1, // -1 = unlimited

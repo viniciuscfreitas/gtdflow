@@ -3,7 +3,36 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Crown, ArrowRight, Zap } from 'lucide-react';
-import Link from 'next/link';
+import { useStripeSubscription } from '@/lib/hooks/useStripeSubscription';
+import { useState } from 'react';
+
+// Upgrade Button Component
+function UpgradeButton({ className }: { className: string }) {
+  const { upgradeToProMonthly } = useStripeSubscription();
+  const [loading, setLoading] = useState(false);
+
+  const handleUpgrade = async () => {
+    try {
+      setLoading(true);
+      await upgradeToProMonthly();
+    } catch (error) {
+      console.error('Upgrade error:', error);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button 
+      size="sm" 
+      className={className}
+      onClick={handleUpgrade}
+      disabled={loading}
+    >
+      {loading ? 'Loading...' : 'Upgrade Pro'}
+      <ArrowRight className="h-4 w-4 ml-1" />
+    </Button>
+  );
+}
 
 interface UpgradeBannerProps {
   type: 'tasks' | 'projects' | 'premium-feature';
@@ -85,12 +114,7 @@ export function UpgradeBanner({
               </p>
             </div>
           </div>
-          <Link href="/auth/register">
-            <Button size="sm" className={colors.button}>
-              Upgrade Pro
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </Link>
+          <UpgradeButton className={colors.button} />
         </div>
       </CardContent>
     </Card>
