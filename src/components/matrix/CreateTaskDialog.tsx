@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { useEisenhowerTasks } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { EisenhowerQuadrant } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -26,7 +27,8 @@ export function CreateTaskDialog({ open, onOpenChange, defaultQuadrant }: Create
   const [status, setStatus] = useState<'pending' | 'in-progress' | 'completed'>('pending');
   const [dueDate, setDueDate] = useState('');
 
-  const { create } = useEisenhowerTasks();
+  const { user } = useAuth();
+  const { create } = useFirestoreMatrix(user);
 
   // Calcular quadrante baseado em urgência e importância
   const calculateQuadrant = (urgencyValue: number, importanceValue: number): EisenhowerQuadrant => {

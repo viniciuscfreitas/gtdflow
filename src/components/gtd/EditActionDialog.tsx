@@ -23,7 +23,8 @@ import {
   Zap,
   Clock
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 import { GTDItem } from '@/lib/types';
 
@@ -46,7 +47,8 @@ interface EditActionDialogProps {
 }
 
 export function EditActionDialog({ actionId, onClose, onSuccess }: EditActionDialogProps) {
-  const { data: gtdItems, update } = useGTDItems();
+  const { user } = useAuth();
+  const { data: gtdItems, update } = useFirestoreGTD(user);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const action = gtdItems.find((item: GTDItem) => item.id === actionId);

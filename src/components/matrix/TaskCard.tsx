@@ -15,7 +15,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useEisenhowerTasks } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useCrossMethodologySync } from '@/lib/hooks/useCrossMethodologySync';
 import { EisenhowerTask } from '@/lib/types';
 // import { EditTaskDialog } from './EditTaskDialog';
@@ -34,7 +35,8 @@ interface TaskCardProps {
 
 export function TaskCard({ task, quadrantColor, isDragging = false }: TaskCardProps) {
   // const [showEditDialog, setShowEditDialog] = useState(false);
-  const { update: updateTask } = useEisenhowerTasks();
+  const { user } = useAuth();
+  const { update: updateTask } = useFirestoreMatrix(user);
   const { syncTaskCompletion, syncTaskDeletion } = useCrossMethodologySync();
   const { recordCompletion, recordStatusChange } = useTaskCompletionHistory();
   const { showUndoToast } = useUndoToast();

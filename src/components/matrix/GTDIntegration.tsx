@@ -14,7 +14,9 @@ import {
   Clock,
   Archive
 } from 'lucide-react';
-import { useGTDItems, useEisenhowerTasks } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { GTDItem, EisenhowerQuadrant } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -26,8 +28,9 @@ export function GTDIntegration({ onClose }: GTDIntegrationProps) {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [importing, setImporting] = useState(false);
 
-  const { data: gtdItems } = useGTDItems();
-  const { create: createEisenhowerTask } = useEisenhowerTasks();
+  const { user } = useAuth();
+  const { data: gtdItems } = useFirestoreGTD(user);
+  const { create: createEisenhowerTask } = useFirestoreMatrix(user);
 
   // Filtrar apenas próximas ações ativas
   const availableItems = gtdItems.filter(item => 

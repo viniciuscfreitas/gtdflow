@@ -11,13 +11,15 @@ import {
   Trash2, 
   AlertCircle
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { ProcessItemDialog } from './ProcessItemDialog';
 import { toast } from 'sonner';
 import { GTDItem } from '@/lib/types';
 
 export function InboxList() {
-  const { data: gtdItems, update, remove } = useGTDItems();
+  const { user } = useAuth();
+  const { data: gtdItems, update, remove } = useFirestoreGTD(user);
   const [processingItem, setProcessingItem] = useState<string | null>(null);
 
   // Filter inbox items

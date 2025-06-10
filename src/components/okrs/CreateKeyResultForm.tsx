@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X, Target } from 'lucide-react';
-import { useKeyResults, useObjectives } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreKeyResults, useFirestoreObjectives } from '@/lib/hooks/useFirestoreOKRs';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface CreateKeyResultFormProps {
@@ -22,8 +23,9 @@ interface CreateKeyResultFormProps {
 
 export function CreateKeyResultForm({ objectiveId, onSuccess, onCancel }: CreateKeyResultFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { create } = useKeyResults();
-  const { update, getById } = useObjectives();
+  const { user } = useAuth();
+  const { create } = useFirestoreKeyResults(user);
+  const { update, getById } = useFirestoreObjectives(user);
 
   const {
     register,

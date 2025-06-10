@@ -14,13 +14,15 @@ import {
   TrendingUp,
   AlertCircle
 } from 'lucide-react';
-import { useObjectives } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreObjectives } from '@/lib/hooks/useFirestoreOKRs';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { Objective } from '@/lib/types';
 import { CreateObjectiveForm } from './CreateObjectiveForm';
 import { ObjectiveDetail } from './ObjectiveDetail';
 
 export function ObjectivesList() {
-  const { data: objectives, isLoading, error, remove } = useObjectives();
+  const { user } = useAuth();
+  const { data: objectives, isLoading, error, remove } = useFirestoreObjectives(user);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedObjective, setSelectedObjective] = useState<Objective | null>(null);
 

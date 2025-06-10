@@ -22,7 +22,9 @@ import {
   CheckCircle2,
   Info
 } from 'lucide-react';
-import { useGTDItems, useEisenhowerTasks } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { GTDItem, EisenhowerQuadrant } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -33,8 +35,9 @@ interface ProcessItemDialogProps {
 }
 
 export function ProcessItemDialog({ itemId, onClose, onSuccess }: ProcessItemDialogProps) {
-  const { data: gtdItems, update, remove } = useGTDItems();
-  const { create: createEisenhowerTask } = useEisenhowerTasks();
+  const { user } = useAuth();
+  const { data: gtdItems, update, remove } = useFirestoreGTD(user);
+  const { create: createEisenhowerTask } = useFirestoreMatrix(user);
   
   const item = gtdItems.find((item: GTDItem) => item.id === itemId);
   

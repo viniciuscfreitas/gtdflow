@@ -17,7 +17,8 @@ import {
   Clock,
   AlertTriangle
 } from 'lucide-react';
-import { useKeyResults, useObjectives } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreKeyResults, useFirestoreObjectives } from '@/lib/hooks/useFirestoreOKRs';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { CreateKeyResultForm } from './CreateKeyResultForm';
 import { toast } from 'sonner';
 
@@ -26,8 +27,9 @@ interface KeyResultsListProps {
 }
 
 export function KeyResultsList({ objectiveId }: KeyResultsListProps) {
-  const { data: keyResults, remove: removeKeyResult, update: updateKeyResult } = useKeyResults();
-  const { getById: getObjective, update: updateObjective } = useObjectives();
+  const { user } = useAuth();
+  const { data: keyResults, remove: removeKeyResult, update: updateKeyResult } = useFirestoreKeyResults(user);
+  const { getById: getObjective, update: updateObjective } = useFirestoreObjectives(user);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingKeyResult, setEditingKeyResult] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<number>(0);

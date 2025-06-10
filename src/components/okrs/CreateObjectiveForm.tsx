@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X } from 'lucide-react';
-import { useObjectives } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreObjectives } from '@/lib/hooks/useFirestoreOKRs';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface CreateObjectiveFormProps {
@@ -21,7 +22,8 @@ interface CreateObjectiveFormProps {
 
 export function CreateObjectiveForm({ onSuccess, onCancel }: CreateObjectiveFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { create } = useObjectives();
+  const { user } = useAuth();
+  const { create } = useFirestoreObjectives(user);
 
   const {
     register,

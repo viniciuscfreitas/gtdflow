@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { useEisenhowerTasks } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { EisenhowerTask, EisenhowerQuadrant } from '@/lib/types';
 import { toast } from 'sonner';
 
@@ -26,7 +27,8 @@ export function EditTaskDialog({ task, open, onOpenChange }: EditTaskDialogProps
   const [status, setStatus] = useState<'pending' | 'in-progress' | 'completed' | 'pending-approval' | 'needs-revision'>('pending');
   const [dueDate, setDueDate] = useState('');
 
-  const { update } = useEisenhowerTasks();
+  const { user } = useAuth();
+  const { update } = useFirestoreMatrix(user);
 
   // Carregar dados da tarefa
   useEffect(() => {

@@ -20,15 +20,18 @@ import {
   AlertTriangle,
   Users
 } from 'lucide-react';
-import { useGTDItems, useEisenhowerTasks } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useCrossMethodologySync } from '@/lib/hooks/useCrossMethodologySync';
 import { EditWaitingDialog } from './EditWaitingDialog';
 import { GTDItem, EisenhowerQuadrant } from '@/lib/types';
 import { useNotificationContext } from '@/lib/contexts/NotificationContext';
 
 export function WaitingForList() {
-  const { data: gtdItems, update } = useGTDItems();
-  const { data: eisenhowerTasks, create: createEisenhowerTask } = useEisenhowerTasks();
+  const { user } = useAuth();
+  const { data: gtdItems, update } = useFirestoreGTD(user);
+  const { data: eisenhowerTasks, create: createEisenhowerTask } = useFirestoreMatrix(user);
   const { syncTaskCompletion, syncTaskDeletion } = useCrossMethodologySync();
   const { notifySuccess, notifyError } = useNotificationContext();
   const [searchTerm, setSearchTerm] = useState('');

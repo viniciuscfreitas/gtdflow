@@ -14,7 +14,8 @@ import {
   Clock,
   BarChart3
 } from 'lucide-react';
-import { useObjectives, useKeyResults } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreOKRs } from '@/lib/hooks/useFirestoreOKRs';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { Objective, KeyResult } from '@/lib/types';
 // Temporarily commented out for debugging
 import {
@@ -48,8 +49,8 @@ const calculateKeyResultProgress = (kr: { currentValue?: number; targetValue?: n
 };
 
 export function OKRsDashboard() {
-  const { data: objectives } = useObjectives();
-  const { data: keyResults } = useKeyResults();
+  const { user } = useAuth();
+  const { objectives: { data: objectives }, keyResults: { data: keyResults } } = useFirestoreOKRs(user);
 
   // Debug logs
   console.log('OKRsDashboard - Raw objectives:', objectives);

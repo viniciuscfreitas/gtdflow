@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Inbox, Plus, Send } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface QuickCaptureProps {
@@ -20,7 +21,8 @@ interface QuickCaptureProps {
 export function QuickCapture({ onSuccess, compact = false }: QuickCaptureProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(!compact);
-  const { create } = useGTDItems();
+  const { user } = useAuth();
+  const { create } = useFirestoreGTD(user);
 
   const {
     register,

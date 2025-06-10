@@ -15,14 +15,16 @@ import {
   FileText,
   ExternalLink
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 import { GTDItem } from '@/lib/types';
 import { ViewReferenceDialog } from './ViewReferenceDialog';
 import { EditReferenceDialog } from './EditReferenceDialog';
 
 export function ReferenceList() {
-  const { data: gtdItems, remove } = useGTDItems();
+  const { user } = useAuth();
+  const { data: gtdItems, remove } = useFirestoreGTD(user);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingItem, setEditingItem] = useState<GTDItem | null>(null);
   const [viewingItem, setViewingItem] = useState<GTDItem | null>(null);

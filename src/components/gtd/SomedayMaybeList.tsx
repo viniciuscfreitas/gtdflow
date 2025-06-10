@@ -14,13 +14,15 @@ import {
   ArrowRight,
   Inbox
 } from 'lucide-react';
-import { useGTDItems } from '@/lib/hooks/useLocalStorage';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { toast } from 'sonner';
 import { GTDItem } from '@/lib/types';
 import { EditSomedayDialog } from './EditSomedayDialog';
 
 export function SomedayMaybeList() {
-  const { data: gtdItems, update, remove } = useGTDItems();
+  const { user } = useAuth();
+  const { data: gtdItems, update, remove } = useFirestoreGTD(user);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingItem, setEditingItem] = useState<GTDItem | null>(null);
 
