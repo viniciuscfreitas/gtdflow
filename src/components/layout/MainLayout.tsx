@@ -3,10 +3,8 @@
 import { usePathname } from 'next/navigation';
 import { MainNav, MobileBottomNav } from '@/components/navigation/MainNav';
 import { NotificationButton } from '@/components/navigation/NotificationButton';
-import { SyncStatusIndicator } from '@/components/navigation/SyncStatusIndicator';
 import { UndoToastContainer } from '@/components/ui/UndoToastContainer';
 import { UserMenu } from '@/components/auth/UserMenu';
-import { useAuth } from '@/lib/contexts/AuthContext';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -18,7 +16,6 @@ const authRoutes = ['/auth/login', '/auth/register'];
 export function MainLayout({ children }: MainLayoutProps) {
   const pathname = usePathname();
   const isAuthRoute = authRoutes.includes(pathname);
-  const { user } = useAuth();
 
   // Se for rota de auth, renderizar apenas o conteúdo sem navegação
   if (isAuthRoute) {
@@ -42,10 +39,9 @@ export function MainLayout({ children }: MainLayoutProps) {
               <MainNav />
             </div>
 
-            {/* Status and User menu */}
+            {/* User menu */}
             <div className="flex items-center gap-3">
               <NotificationButton />
-              <SyncStatusIndicator user={user} />
               <UserMenu />
             </div>
           </div>
