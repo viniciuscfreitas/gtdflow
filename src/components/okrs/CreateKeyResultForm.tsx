@@ -49,12 +49,12 @@ export function CreateKeyResultForm({ objectiveId, onSuccess, onCancel }: Create
     setIsSubmitting(true);
     try {
       // Create the key result
-      const newKeyResult = create(data);
+      const newKeyResult = await create(data);
       
       // Update the objective to include this key result
-      if (objective) {
+      if (objective && newKeyResult) {
         const updatedKeyResults = [...(objective.keyResults || []), newKeyResult];
-        update(objectiveId, { keyResults: updatedKeyResults });
+        await update(objectiveId, { keyResults: updatedKeyResults });
       }
       
       toast.success('Key Result criado com sucesso!');
