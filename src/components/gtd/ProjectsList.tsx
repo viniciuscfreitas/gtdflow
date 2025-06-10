@@ -285,7 +285,7 @@ export function ProjectsList() {
                     <div className="border-t pt-3">
                       <h5 className="text-sm font-medium mb-2">Próximas ações:</h5>
                       <div className="space-y-1">
-                        {actions.slice(0, 3).map((action: GTDItem) => (
+                        {actions.map((action: GTDItem) => (
                           <div key={action.id} className="flex items-center gap-2 text-sm">
                             <div className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0"></div>
                             <span className="line-clamp-1">{action.title}</span>
@@ -296,11 +296,6 @@ export function ProjectsList() {
                             )}
                           </div>
                         ))}
-                        {actions.length > 3 && (
-                          <div className="text-xs text-muted-foreground pl-3.5">
-                            +{actions.length - 3} mais ação{actions.length - 3 !== 1 ? 'ões' : ''}
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}
