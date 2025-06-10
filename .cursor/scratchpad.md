@@ -252,243 +252,221 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 
 ## Background and Motivation
 
-**🔄 PROBLEMA CRÍTICO IDENTIFICADO**: O usuário está logado na mesma conta no MacBook e iPhone, mas os dados NÃO estão sincronizando entre dispositivos. Temos autenticação funcionando mas ainda usando localStorage local.
+**🚨 NOVO PROBLEMA CRÍTICO**: Sincronização ainda retornando itens apagados no GTD
 
 **SITUAÇÃO ATUAL:**
-- ✅ **Firebase Auth**: Login/logout funcionando perfeitamente
-- ✅ **Interface GTD + Matriz**: Sistema perfeito e robusto
-- ❌ **Storage**: Usando localStorage (dados presos no dispositivo)
-- ❌ **Sincronização**: Zero sync entre MacBook ↔ iPhone
+- ✅ **Deploy Vercel**: Sistema em produção funcionando
+- ✅ **Firebase Auth**: Login/logout operacional  
+- ✅ **Optimistic Updates**: UI responsiva implementada
+- ❌ **Soft Delete Bug**: Itens deletados estão retornando na sincronização
+- ❌ **Query Filter**: Filtro `isDeleted != true` não está funcionando corretamente
 
-**EXPECTATIVA vs REALIDADE:**
-- **Usuário espera**: Criar tarefa no MacBook → ver no iPhone
-- **Realidade atual**: Cada dispositivo tem dados isolados
-- **Frustração**: Sistema parece bugado apesar de funcionar
+**PROBLEMA ESPECÍFICO:**
+Mesmo após implementar soft delete com `isDeleted: true`, os itens deletados continuam aparecendo na interface. Isso sugere:
+1. Query filter não está funcionando
+2. Dados antigos sem campo `isDeleted`  
+3. Problemas de indexação no Firestore
+4. Conflitos entre dispositivos
+
+**IMPACTO:**
+- Usuário deleta item → item volta a aparecer
+- Experiência ruim e confusa
+- Perda de confiança no sistema
+- Sync entre dispositivos inconsistente
 
 ## Key Challenges and Analysis
 
-### 🚨 **ANÁLISE TÉCNICA DO PROBLEMA**
+### 🚨 **ANÁLISE TÉCNICA DO PROBLEMA SOFT DELETE**
 
-#### **Root Cause Analysis:**
-1. **Autenticação ≠ Sincronização**: Auth resolve QUEM você é, não ONDE seus dados estão
-2. **localStorage**: Dados salvos apenas no browser local
-3. **Sem Cloud Storage**: Firestore configurado mas não sendo usado
-4. **Arquitetura Híbrida**: Auth na cloud + dados locais = problema
+#### **Possíveis Causas Raiz:**
 
-#### **Impactos Identificados:**
-- **UX Quebrada**: Usuário logado mas dados não aparecem
-- **Confiança Perdida**: Sistema parece amador ou bugado
-- **Workflow Interrompido**: Não pode trabalhar entre dispositivos
-- **Risco de Perda**: Dados podem sumir se device quebrar
+**1. QUERY FILTER ISSUES:**
+- Firestore query `where('isDeleted', '!=', true)` pode ter problemas
+- Documentos sem campo `isDeleted` podem passar pelo filtro
+- Operador `!=` pode ter comportamento inesperado
 
-#### **Desafios Técnicos Críticos:**
+**2. DATA INCONSISTENCY:**
+- Documentos criados antes da implementação não têm `isDeleted: false`
+- Documentos podem ter `isDeleted: undefined` (que != true)
+- Timestamps `deletedAt` podem estar inconsistentes
 
-**🔥 PRIORIDADE MÁXIMA:**
-1. **Migração Breaking**: localStorage → Firestore (mudança radical)
-2. **Preservação Total**: Não perder NENHUM dado existente
-3. **Real-time Sync**: Mudanças instantâneas MacBook ↔ iPhone
-4. **Offline-First**: Funcionar sem internet + sync depois
-5. **Conflict Resolution**: Mesma tarefa editada em 2 devices
+**3. INDEXING PROBLEMS:**
+- Firestore pode precisar de índice para query `isDeleted != true`
+- Compound queries podem estar falhando
+- Performance degradada causando timeouts
 
-**🎯 ARQUITETURA NECESSÁRIA:**
-```
-ANTES: User Auth ✅ → localStorage ❌ → UI
-DEPOIS: User Auth ✅ → Firestore ✅ → Real-time UI
-```
+**4. RACE CONDITIONS:**
+- Optimistic updates competindo com real-time listeners
+- Updates de `isDeleted` não propagando corretamente
+- Conflitos entre dispositivos diferentes
 
-### **Complexidade da Migração:**
+**5. SCHEMA MIGRATION:**
+- Dados antigos sem estrutura de soft delete
+- Migração incompleta do localStorage
+- Documentos órfãos no Firestore
 
-**BAIXA**: Firestore já configurado  
-**MÉDIA**: Schema design para GTD + Matriz  
-**ALTA**: Migração sem perda de dados  
-**CRÍTICA**: Real-time sync + offline support  
+#### **Complexidade do Problema:**
+
+**ALTA**: Envolve query behavior, data migration, real-time sync
+**CRÍTICA**: Afeta funcionalidade core do sistema
+**URGENTE**: Usuário está perdendo confiança no produto
 
 ## High-level Task Breakdown
 
-### 🔄 **FASE URGENTE: SINCRONIZAÇÃO REAL**
+### 🚨 **FASE CRÍTICA: RESOLVER SOFT DELETE BUG**
 
-#### **T.SYNC.1 - Schema Design & Architecture** ⏰ CRÍTICO
-**Objetivo**: Projetar estrutura Firestore que replique localStorage atual
-**Duração Estimada**: 2-3 horas
-
-**Subtarefas:**
-- **T.SYNC.1.1**: Mapear estrutura atual localStorage (GTD + Matriz)
-- **T.SYNC.1.2**: Design collections Firestore com hierarquia user-based
-- **T.SYNC.1.3**: Definir indexes para performance queries
-- **T.SYNC.1.4**: Criar rules de segurança Firestore
-- **T.SYNC.1.5**: Documentar schema com TypeScript interfaces
-
-**Critérios de Sucesso:**
-- ✅ Schema suporta 100% funcionalidades atuais
-- ✅ Structure permite real-time listeners
-- ✅ Security rules impedem cross-user access
-- ✅ Performance otimizada (sub-100ms queries)
-- ✅ Documentação clara para implementação
-
-#### **T.SYNC.2 - Cloud-First Hooks Implementation** ⏰ URGENTE
-**Objetivo**: Substituir hooks localStorage por hooks Firestore
-**Duração Estimada**: 4-6 horas
+#### **T.SOFT.1 - Diagnóstico e Investigação** ⏰ CRÍTICO
+**Objetivo**: Identificar a causa exata do problema de soft delete
+**Duração Estimada**: 45-60 minutos
 
 **Subtarefas:**
-- **T.SYNC.2.1**: Implementar `useFirestoreGTD` hook
-- **T.SYNC.2.2**: Implementar `useFirestoreMatrix` hook  
-- **T.SYNC.2.3**: Adicionar real-time listeners (onSnapshot)
-- **T.SYNC.2.4**: Configurar offline persistence
-- **T.SYNC.2.5**: Implementar optimistic updates
+- **T.SOFT.1.1**: Examinar query atual no hook `useFirestoreGTD`
+- **T.SOFT.1.2**: Verificar estrutura de dados no Firestore Console
+- **T.SOFT.1.3**: Testar query manualmente no Console
+- **T.SOFT.1.4**: Identificar documentos problemáticos (sem `isDeleted`)
+- **T.SOFT.1.5**: Verificar indexes necessários no Firestore
 
 **Critérios de Sucesso:**
-- ✅ API idêntica aos hooks localStorage atuais
-- ✅ Real-time updates funcionam instantaneamente
-- ✅ Trabalha offline + sincroniza quando online
-- ✅ UI permanece responsiva (loading states)
-- ✅ Error handling robusto
+- ✅ Identificar causa raiz exata do problema
+- ✅ Mapear todos os documentos com estrutura inconsistente
+- ✅ Confirmar se query filter está correto
+- ✅ Identificar necessidade de migração de dados
+- ✅ Documentar todos os achados
 
-#### **T.SYNC.3 - Data Migration Strategy** ⏰ CRÍTICO
-**Objetivo**: Migrar dados localStorage → Firestore sem perda
-**Duração Estimada**: 3-4 horas
+#### **T.SOFT.2 - Data Migration & Cleanup** ⏰ URGENTE
+**Objetivo**: Migrar dados antigos para estrutura consistente
+**Duração Estimada**: 30-45 minutos
 
 **Subtarefas:**
-- **T.SYNC.3.1**: Criar utility de migração automática
-- **T.SYNC.3.2**: Implementar backup automático pré-migração
-- **T.SYNC.3.3**: UI de progresso durante migração
-- **T.SYNC.3.4**: Validação integridade dados pós-migração
-- **T.SYNC.3.5**: Cleanup localStorage após sucesso
+- **T.SOFT.2.1**: Criar script de migração para adicionar `isDeleted: false` 
+- **T.SOFT.2.2**: Identificar e corrigir documentos órfãos
+- **T.SOFT.2.3**: Garantir todos os docs têm campos obrigatórios
+- **T.SOFT.2.4**: Validar integridade dos dados após migração
+- **T.SOFT.2.5**: Backup de segurança antes das mudanças
 
 **Critérios de Sucesso:**
-- ✅ 100% dados localStorage migram corretamente
-- ✅ Backup criado antes de qualquer alteração
-- ✅ UI clara mostra progresso e status
-- ✅ Rollback possível se algo falhar
-- ✅ Cleanup automático após confirmação
+- ✅ Todos os documentos têm `isDeleted: false` (ativos) ou `true` (deletados)
+- ✅ Estrutura de dados 100% consistente
+- ✅ Backup realizado antes de qualquer mudança
+- ✅ Validação confirma integridade dos dados
+- ✅ Zero documentos com estrutura inconsistente
 
-#### **T.SYNC.4 - Multi-Device Testing** ⏰ VALIDAÇÃO
-**Objetivo**: Garantir sync perfeito MacBook ↔ iPhone
-**Duração Estimada**: 2-3 horas
+#### **T.SOFT.3 - Query Optimization** ⏰ IMPLEMENTAÇÃO
+**Objetivo**: Otimizar queries para garantir filtro correto
+**Duração Estimada**: 30-45 minutos
 
 **Subtarefas:**
-- **T.SYNC.4.1**: Teste criação tarefa (MacBook → iPhone)
-- **T.SYNC.4.2**: Teste drag & drop Matriz (iPhone → MacBook)
-- **T.SYNC.4.3**: Teste edição simultânea (conflict resolution)
-- **T.SYNC.4.4**: Teste offline/online scenarios
-- **T.SYNC.4.5**: Performance testing (3G/4G/WiFi)
+- **T.SOFT.3.1**: Substituir `!=` por query mais robusta se necessário
+- **T.SOFT.3.2**: Implementar filtro duplo: `isDeleted == false`
+- **T.SOFT.3.3**: Adicionar ordenação para performance
+- **T.SOFT.3.4**: Configurar indexes compostos no Firestore
+- **T.SOFT.3.5**: Testar query com dados reais
 
 **Critérios de Sucesso:**
-- ✅ Mudanças aparecem em <1 segundo no outro device
-- ✅ Drag & drop sincroniza imediatamente
-- ✅ Conflitos resolvidos automaticamente
-- ✅ Offline work + sync funciona perfeitamente
-- ✅ Performance aceitável em conexões lentas
+- ✅ Query filtra corretamente itens deletados
+- ✅ Performance da query otimizada
+- ✅ Indexes configurados no Firestore
+- ✅ Teste confirma filtro 100% efetivo
+- ✅ Zero falsos positivos (itens deletados aparecendo)
 
-#### **T.SYNC.5 - Sync Status UX** ⏰ POLISH
-**Objetivo**: Usuário sempre sabe status da sincronização
-**Duração Estimada**: 1-2 horas
+#### **T.SOFT.4 - Real-time Sync Fix** ⏰ ROBUSTEZ
+**Objetivo**: Garantir que soft delete funciona em tempo real
+**Duração Estimada**: 20-30 minutos
 
 **Subtarefas:**
-- **T.SYNC.5.1**: Indicator status sync no header
-- **T.SYNC.5.2**: Loading states durante operations
-- **T.SYNC.5.3**: Offline/online visual feedback
-- **T.SYNC.5.4**: Success notifications discretas
-- **T.SYNC.5.5**: Error handling e retry mechanisms
+- **T.SOFT.4.1**: Verificar real-time listeners respeitam filtro
+- **T.SOFT.4.2**: Testar propagação de `isDeleted: true` entre dispositivos
+- **T.SOFT.4.3**: Validar optimistic updates não conflitam
+- **T.SOFT.4.4**: Implementar debounce se necessário
+- **T.SOFT.4.5**: Testar cenários multi-device
 
 **Critérios de Sucesso:**
-- ✅ Status sempre visível e intuitivo
-- ✅ Loading states não bloqueiam UX
-- ✅ Feedback claro offline vs online
-- ✅ Notifications não irritam usuário
-- ✅ Errors têm ações claras de recuperação
+- ✅ Deletar item em device A → remove instantaneamente em device B
+- ✅ Optimistic updates não conflitam com real-time sync
+- ✅ Sync propagation < 1 segundo
+- ✅ Zero race conditions identificadas
+- ✅ Comportamento consistente entre dispositivos
+
+#### **T.SOFT.5 - Testing & Validation** ⏰ VALIDAÇÃO
+**Objetivo**: Validar correção completa do problema
+**Duração Estimada**: 20-30 minutos
+
+**Subtarefas:**
+- **T.SOFT.5.1**: Teste cenário: deletar item em device A
+- **T.SOFT.5.2**: Verificar item não aparece em device B
+- **T.SOFT.5.3**: Teste offline/online scenarios
+- **T.SOFT.5.4**: Teste com múltiplos dispositivos simultâneos
+- **T.SOFT.5.5**: Validar integridade de dados após testes
+
+**Critérios de Sucesso:**
+- ✅ Items deletados NUNCA retornam
+- ✅ Sync 100% confiável entre dispositivos
+- ✅ Funciona offline + sincroniza quando voltar online
+- ✅ Performance mantida após correções
+- ✅ Zero regressões em outras funcionalidades
 
 ## Project Status Board
 
-### 🔥 **CRÍTICO - RESOLVER HOJE**
-- [x] **T.SYNC.1** - Schema Design ✅ CONCLUÍDO
-  - ✅ Schema Firestore completo (`src/lib/firebase/schema.ts`)
-  - ✅ Serviço sincronização (`src/lib/firebase/syncService.ts`)
-  - ✅ Interfaces TypeScript para todas entidades
-  - ✅ Utilitários mapeamento local ↔ Firestore
-  - ✅ Estratégia resolução conflitos
-- [x] **T.SYNC.2** - Hooks Firestore ✅ CONCLUÍDO
-  - ✅ Hook status sincronização (`src/lib/hooks/useSyncStatus.ts`)
-  - ✅ Componente visual (`src/components/navigation/SyncStatusIndicator.tsx`)
-  - ✅ Hook GTD Firestore (`src/lib/hooks/useFirestoreGTD.ts`)
-  - ✅ Hook Matriz Firestore (`src/lib/hooks/useFirestoreMatrix.ts`)
-  - ✅ Integração no header principal (`src/components/layout/MainLayout.tsx`)
-- [x] **T.SYNC.3** - Data Migration ✅ PULADO (dados não importantes)
-- [ ] **T.SYNC.4** - Substituir Hooks localStorage (Executor - AGORA)
+### 🚨 **CRÍTICO - RESOLVER IMEDIATAMENTE**
+- [ ] **T.SOFT.1** - Diagnóstico e Investigação ⏰ EXECUTOR DEVE INICIAR AGORA
+- [ ] **T.SOFT.2** - Data Migration & Cleanup
+- [ ] **T.SOFT.3** - Query Optimization  
+- [ ] **T.SOFT.4** - Real-time Sync Fix
+- [ ] **T.SOFT.5** - Testing & Validation
 
-### ⚡ **URGENTE - PRÓXIMAS HORAS**  
-- [ ] **T.SYNC.5** - Sync Status UX (Executor)
-
-### ✅ **CONCLUÍDO - BASE SÓLIDA**
+### ✅ **CONCLUÍDO - BASE SÓLIDA EM PRODUÇÃO**
+- [x] **T.DEPLOY.1-4** - Deploy Vercel ✅ SISTEMA EM PRODUÇÃO
+- [x] **T.SYNC.1-2** - Hooks Firestore ✅ IMPLEMENTADOS
+- [x] **OTIMIZAÇÕES** - Optimistic Updates ✅ FUNCIONANDO
 - [x] Firebase Auth + Google Sign-In
-- [x] Sistema GTD + Matriz perfeito
-- [x] Interface limpa e responsiva
-- [x] PWA configurado
-- [x] Sistema desfazer robusto
+- [x] Sistema GTD + Matriz funcional
+- [x] Interface responsiva e PWA
+- [x] GitHub + Vercel integrados
 
 ## Current Status / Progress Tracking
 
-**🎯 STATUS ATUAL**: 
-- Autenticação ✅ funcionando
-- Dados ❌ não sincronizando (localStorage)
-- Usuário ❌ frustrado com problema
+**🚨 STATUS CRÍTICO**: Sistema em produção mas soft delete com bug grave
 
-**📍 PRÓXIMO PASSO IMEDIATO**: 
-Executor deve iniciar **T.SYNC.1** - Schema Design
+**📍 PRÓXIMO PASSO OBRIGATÓRIO**: 
+Executor deve iniciar **T.SOFT.1** IMEDIATAMENTE para diagnosticar causa raiz
 
-**⏠ BLOCKERS IDENTIFICADOS:**
-1. **Breaking Change**: Migração localStorage → Firestore
-2. **Data Loss Risk**: Precisa preservar dados existentes  
-3. **User Expectation**: Espera que "já funcione"
-4. **Mobile Performance**: Sync deve ser rápido em 3G/4G
+**⚠️ BLOCKER ATUAL:**
+Items deletados retornando na sincronização → experiência ruim do usuário
 
 **🔧 CONTEXTO TÉCNICO:**
-- Firebase project: `gtd-flow-app` ✅
-- Firestore: configurado mas não usado ❌
-- Auth: funcionando perfeitamente ✅
-- Current storage: localStorage hooks ❌
+- Sistema funcionando em: https://gtdflow.vercel.app
+- Soft delete implementado mas query filter falhando  
+- Possível problema: dados antigos sem `isDeleted` field
+- Impacto: perda de confiança do usuário
 
 ## Executor's Feedback or Assistance Requests
 
-### 📋 **INSTRUÇÃO ESPECÍFICA PARA EXECUTOR:**
+### 📋 **INSTRUÇÃO URGENTE PARA EXECUTOR:**
 
-**START IMMEDIATELY: T.SYNC.1 - Schema Design**
+**START IMMEDIATELY: T.SOFT.1 - Diagnóstico e Investigação**
 
-1. **Analisar hooks atuais**: 
-   - `src/lib/hooks/useReactiveLocalStorage.ts`
-   - `src/lib/storage/` (todos os arquivos)
-   - Identificar estruturas GTD + Matriz
+1. **Examinar hook atual**: 
+   - Verificar query em `src/lib/hooks/useFirestoreGTD.ts`
+   - Confirmar filtro: `where('isDeleted', '!=', true)`
+   - Testar query isoladamente
 
-2. **Projetar Firestore collections**:
-   ```
-   users/{userId}/
-   ├── gtd/
-   │   ├── inbox/
-   │   ├── nextActions/
-   │   ├── projects/
-   │   └── waitingFor/
-   └── matrix/
-       ├── urgent-important/
-       ├── urgent-not-important/
-       ├── not-urgent-important/
-       └── not-urgent-not-important/
-   ```
+2. **Verificar Firestore Console**:
+   - Acessar: https://console.firebase.google.com/u/1/project/gtd-flow-app/firestore
+   - Navegar para `/users/{userId}/gtd_items/`
+   - Identificar documentos sem campo `isDeleted`
 
-3. **Definir security rules**:
-   - Apenas owner pode acessar seus dados
-   - Read/write apenas para user autenticado
+3. **Teste Manual**:
+   - Deletar item no app
+   - Verificar se `isDeleted: true` é salvo
+   - Confirmar se item continua aparecendo
 
-4. **Documentar interfaces TypeScript**:
-   - Replicar types atuais
-   - Adicionar metadados sync (timestamps, deviceId)
+**DELIVERABLE T.SOFT.1:**
+- Causa raiz identificada
+- Lista de documentos problemáticos
+- Estratégia de correção definida
 
-**DELIVERABLE T.SYNC.1:**
-- Schema Firestore documentado
-- Security rules prontas
-- TypeScript interfaces
-- Migration strategy outline
-
-### 🎯 **OBJECTIVE DESTA ITERAÇÃO:**
-**RESOLVER URGENTEMENTE** a falta de sincronização entre MacBook e iPhone, mantendo toda funcionalidade GTD + Matriz intacta.
+### 🎯 **OBJETIVO DESTA ITERAÇÃO:**
+**RESOLVER URGENTEMENTE** o bug de soft delete que está fazendo itens deletados retornarem, restaurando a confiança do usuário no sistema.
 
 ## Lessons
 
@@ -529,4 +507,11 @@ Sistema funcional com autenticação, mas dados isolados por device. URGENTE mig
 2. Erro de sincronização `undefined` corrigido ✅
 3. Deploy com correção realizado ✅
 
-**🎯 STATUS ATUAL**: Sistema totalmente funcional em produção com sincronização Firestore funcionando. 
+**🚀 MELHORIAS IMPLEMENTADAS**:
+1. **Optimistic Updates**: UI responde instantaneamente (remove/cria/atualiza)
+2. **Rollback Automático**: Reverte mudanças se operação falhar
+3. **Conflict Prevention**: Incrementa `syncVersion` para evitar conflitos
+4. **Auto Cleanup**: Remove itens deletados há +30 dias automaticamente
+5. **Better UX**: Mensagens de erro temporárias e feedback visual
+
+**🎯 STATUS ATUAL**: Sistema totalmente funcional em produção com sincronização Firestore otimizada e responsiva. 

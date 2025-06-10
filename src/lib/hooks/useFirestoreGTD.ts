@@ -62,14 +62,24 @@ export function useFirestoreGTD(user: User | null) {
       orderBy('createdAt', 'desc')
     );
 
+    console.log('🔍 DEBUG: Query configurada para filtrar isDeleted != true');
+
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
         try {
           const items: GTDItem[] = [];
           
+          console.log(`🔍 DEBUG: Snapshot recebido com ${snapshot.docs.length} documentos`);
+          
           snapshot.forEach((doc) => {
             const data = doc.data();
+            
+            console.log(`🔍 DEBUG: Documento ${doc.id}:`, {
+              isDeleted: data.isDeleted,
+              hasIsDeletedField: 'isDeleted' in data,
+              title: data.title
+            });
             
             // Converter timestamps Firestore para Date
             const item: GTDItem = {
@@ -84,6 +94,7 @@ export function useFirestoreGTD(user: User | null) {
             items.push(item);
           });
 
+          console.log(`🔍 DEBUG: Total de itens processados: ${items.length}`);
           setData(items);
           setError(null);
         } catch (err) {
