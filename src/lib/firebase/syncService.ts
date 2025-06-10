@@ -34,6 +34,23 @@ import { BaseEntity } from '@/lib/types';
 import { LocalStorageManager, STORAGE_KEYS } from '@/lib/storage/localStorage';
 
 // ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Remove campos undefined de um objeto para evitar erros no Firestore
+ */
+function removeUndefinedFields(obj: any): any {
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
+}
+
+// ============================================================================
 // SYNC SERVICE CLASS
 // ============================================================================
 
@@ -437,20 +454,21 @@ export class FirebaseSyncService {
     const profileRef = doc(db, FIRESTORE_COLLECTIONS.USERS, user.uid);
     const profileDoc = await getDoc(profileRef);
 
-    const profileData = {
+    // Remover campos undefined usando a função helper
+    const profileData = removeUndefinedFields({
       email: user.email || '',
-      displayName: user.displayName || undefined,
-      photoURL: user.photoURL || undefined,
+      displayName: user.displayName || null,
+      photoURL: user.photoURL || null,
       lastLoginAt: new Date(),
-    };
+    });
 
     if (!profileDoc.exists()) {
       // Criar novo perfil
-      const newProfile: UserProfile = {
+      const newProfile: UserProfile = removeUndefinedFields({
         id: user.uid,
         email: user.email || '',
-        displayName: user.displayName || undefined,
-        photoURL: user.photoURL || undefined,
+        displayName: user.displayName || null,
+        photoURL: user.photoURL || null,
         createdAt: new Date(),
         lastLoginAt: new Date(),
         syncEnabled: true,
@@ -460,7 +478,7 @@ export class FirebaseSyncService {
         completedTasks: 0,
         totalProjects: 0,
         joinedAt: new Date(),
-      };
+      }) as UserProfile;
       
       await setDoc(profileRef, newProfile);
     } else {

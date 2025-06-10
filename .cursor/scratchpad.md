@@ -190,7 +190,27 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 
 ## Current Status / Progress Tracking
 
-**🎯 STATUS ATUAL**: Sistema totalmente funcional em produção com sincronização Firestore funcionando.
+**🚨 HOTFIX APLICADO**: Multiplicação infinita de tarefas PARADA
+
+**📍 CORREÇÕES IMPLEMENTADAS**: 
+- ✅ Query corrigida: `!=` → `==` false
+- ✅ Limpeza automática desabilitada temporariamente  
+- ✅ Filtro de segurança adicional
+- ✅ Deploy realizado
+
+**⚠️ PRÓXIMOS PASSOS CRÍTICOS:**
+1. **T.SOFT.2** - Migrar dados antigos para ter `isDeleted: false`
+2. **T.SOFT.3** - Configurar índices no Firestore
+3. **T.SOFT.4** - Reabilitar limpeza automática
+4. **T.SOFT.5** - Teste completo multi-device
+
+**🔧 CONTEXTO TÉCNICO:**
+- Sistema funcionando em: https://gtdflow.vercel.app
+- Multiplicação parada mas dados podem estar inconsistentes
+- Alguns documentos podem não ter campo `isDeleted`
+- Índices do Firestore precisam ser criados
+
+**🎯 STATUS ATUAL**: Sistema totalmente funcional em produção com sincronização Firestore otimizada e responsiva.
 
 **📍 PRÓXIMOS PASSOS OPCIONAIS**: 
 1. ✅ Configurar domínio personalizado (se desejado)
