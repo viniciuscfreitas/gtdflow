@@ -16,22 +16,25 @@ import {
   Zap,
   Award
 } from 'lucide-react';
-import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
-import { 
-  Objective, 
-  GTDItem, 
-  EisenhowerTask, 
-  PomodoroSession,
-  ParetoAnalysis 
-} from '@/lib/types';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestoreMatrix } from '@/lib/hooks/useFirestoreMatrix';
+import { useFirestoreOKRs } from '@/lib/hooks/useFirestoreOKRs';
+import { useFirestorePomodoro } from '@/lib/hooks/useFirestorePomodoro';
+import { useFirestorePareto } from '@/lib/hooks/useFirestorePareto';
 
 export function UnifiedMetrics() {
-  // Carregar dados de todas as metodologias
-  const { data: objectives = [] } = useLocalStorage('objectives', [] as Objective[]);
-  const { data: gtdItems = [] } = useLocalStorage('gtd-items', [] as GTDItem[]);
-  const { data: eisenhowerTasks = [] } = useLocalStorage('eisenhower-tasks', [] as EisenhowerTask[]);
-  const { data: pomodoroSessions = [] } = useLocalStorage('pomodoro-sessions', [] as PomodoroSession[]);
-  const { data: paretoAnalyses = [] } = useLocalStorage('pareto-analyses', [] as ParetoAnalysis[]);
+  const { user } = useAuth();
+  
+  // Carregar dados de todas as metodologias via Firestore
+  const { data: gtdItems = [] } = useFirestoreGTD(user);
+  const { data: eisenhowerTasks = [] } = useFirestoreMatrix(user);
+  const { objectives } = useFirestoreOKRs(user);
+  const { sessions: pomodoroSessions = [] } = useFirestorePomodoro(user);
+  const { data: paretoAnalyses = [] } = useFirestorePareto(user);
+  
+  // Extrair dados dos objetivos
+  const objectivesData = objectives?.data || [];
 
   // Calcular métricas unificadas
   const metrics = useMemo(() => {
@@ -39,7 +42,7 @@ export function UnifiedMetrics() {
     today.setHours(0, 0, 0, 0);
 
     // OKRs Metrics
-    const activeObjectives = objectives.filter(obj => obj.status === 'active');
+    const activeObjectives = objectivesData.filter(obj => obj.status === 'active');
     const avgOKRProgress = activeObjectives.length > 0 
       ? activeObjectives.reduce((acc, obj) => {
           const keyResultsProgress = obj.keyResults.length > 0
@@ -67,7 +70,8 @@ export function UnifiedMetrics() {
     );
 
     // Pomodoro Metrics
-    const todayPomodoros = pomodoroSessions.filter(session => 
+    const pomodoroSessionsData = Array.isArray(pomodoroSessions) ? pomodoroSessions : pomodoroSessions?.data || [];
+    const todayPomodoros = pomodoroSessionsData.filter(session => 
       session.startTime && 
       new Date(session.startTime) >= today && 
       session.status === 'completed'
@@ -115,7 +119,7 @@ export function UnifiedMetrics() {
       // Overall
       productivityScore
     };
-  }, [objectives, gtdItems, eisenhowerTasks, pomodoroSessions, paretoAnalyses]);
+  }, [objectivesData, gtdItems, eisenhowerTasks, pomodoroSessions, paretoAnalyses]);
 
   // Formatar tempo
   const formatTime = (minutes: number) => {

@@ -14,24 +14,27 @@ import {
   Download,
   Filter
 } from 'lucide-react';
-import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
-import { 
-  Objective, 
-  GTDItem, 
-  PomodoroSession,
-  ParetoAnalysis 
-} from '@/lib/types';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { useFirestoreGTD } from '@/lib/hooks/useFirestoreGTD';
+import { useFirestoreOKRs } from '@/lib/hooks/useFirestoreOKRs';
+import { useFirestorePomodoro } from '@/lib/hooks/useFirestorePomodoro';
+import { useFirestorePareto } from '@/lib/hooks/useFirestorePareto';
 
 type ReportPeriod = 'week' | 'month' | 'quarter';
 
 export function UnifiedReports() {
   const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriod>('week');
+  const { user } = useAuth();
   
-  // Carregar dados
-  const { data: objectives = [] } = useLocalStorage('objectives', [] as Objective[]);
-  const { data: gtdItems = [] } = useLocalStorage('gtd-items', [] as GTDItem[]);
-  const { data: pomodoroSessions = [] } = useLocalStorage('pomodoro-sessions', [] as PomodoroSession[]);
-  const { data: paretoAnalyses = [] } = useLocalStorage('pareto-analyses', [] as ParetoAnalysis[]);
+  // Carregar dados via Firestore
+  const { data: gtdItems = [] } = useFirestoreGTD(user);
+  const { objectives } = useFirestoreOKRs(user);
+  const { sessions: pomodoroSessions = [] } = useFirestorePomodoro(user);
+  const { data: paretoAnalyses = [] } = useFirestorePareto(user);
+  
+  // Extrair dados dos objetivos e pomodoros
+  const objectivesData = objectives?.data || [];
+  const pomodoroSessionsData = Array.isArray(pomodoroSessions) ? pomodoroSessions : pomodoroSessions?.data || [];
 
   // Calcular período
   const periodData = useMemo(() => {
@@ -49,12 +52,12 @@ export function UnifiedReports() {
       item.createdAt && new Date(item.createdAt) >= startDate
     );
     
-    const periodPomodoros = pomodoroSessions.filter(session => 
+    const periodPomodoros = pomodoroSessionsData.filter(session => 
       session.startTime && new Date(session.startTime) >= startDate
     );
 
     // Métricas OKRs
-    const activeObjectives = objectives.filter(obj => obj.status === 'active');
+    const activeObjectives = objectivesData.filter(obj => obj.status === 'active');
     const avgOKRProgress = activeObjectives.length > 0 
       ? activeObjectives.reduce((acc, obj) => {
           const keyResultsProgress = obj.keyResults.length > 0
@@ -105,7 +108,7 @@ export function UnifiedReports() {
       // Pareto
       paretoEfficiency
     };
-  }, [selectedPeriod, objectives, gtdItems, pomodoroSessions, paretoAnalyses]);
+  }, [selectedPeriod, objectivesData, gtdItems, pomodoroSessionsData, paretoAnalyses]);
 
   // Formatar tempo
   const formatTime = (minutes: number) => {

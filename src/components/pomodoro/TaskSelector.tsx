@@ -15,8 +15,9 @@ import {
   Circle,
   Filter
 } from 'lucide-react';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { useGTDItemsFirestore } from '@/lib/hooks/useFirestoreCompat';
 import { GTDItem } from '@/lib/types';
-import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
 import { toast } from 'sonner';
 
 interface TaskSelectorProps {
@@ -30,8 +31,10 @@ export function TaskSelector({ selectedTask, onTaskSelect, onCreateTask }: TaskS
   const [filterContext, setFilterContext] = useState<string>('all');
   const [filterEnergy, setFilterEnergy] = useState<string>('all');
   
-  // Carregar tarefas GTD
-  const { data: gtdItems = [] } = useLocalStorage('gtd-items', [] as GTDItem[]);
+  const { user } = useAuth();
+  
+  // Carregar tarefas GTD via Firestore
+  const { data: gtdItems = [] } = useGTDItemsFirestore(user);
 
   // Filtrar tarefas disponíveis para Pomodoro
   const availableTasks = useMemo(() => {

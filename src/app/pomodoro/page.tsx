@@ -6,8 +6,9 @@ import { PomodoroTimer, PomodoroSessionType } from '@/components/pomodoro/Pomodo
 import { PomodoroStats } from '@/components/pomodoro/PomodoroStats';
 import { TaskSelector } from '@/components/pomodoro/TaskSelector';
 import { SessionHistory } from '@/components/pomodoro/SessionHistory';
-import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
-import { PomodoroSession, GTDItem } from '@/lib/types';
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { usePomodoroSessionsFirestore, useGTDItemsFirestore } from '@/lib/hooks/useFirestoreCompat';
+import { PomodoroSession } from '@/lib/types';
 import { toast } from 'sonner';
 
 export default function PomodoroPage() {
@@ -15,9 +16,11 @@ export default function PomodoroPage() {
   const [selectedTask, setSelectedTask] = useState<{ id: string; title: string } | null>(null);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   
-  // Dados persistidos
-  const { data: sessions = [], create: createSession, update: updateSession } = useLocalStorage('pomodoro-sessions', [] as PomodoroSession[]);
-  const { data: gtdItems = [], update: updateGtdItem } = useLocalStorage('gtd-items', [] as GTDItem[]);
+  const { user } = useAuth();
+  
+  // Dados persistidos via Firestore (API compatível com localStorage)
+  const { data: sessions = [], create: createSession, update: updateSession } = usePomodoroSessionsFirestore(user);
+  const { data: gtdItems = [], update: updateGtdItem } = useGTDItemsFirestore(user);
 
   // Calcular streak atual (dias consecutivos com pelo menos 1 pomodoro)
   const calculateStreak = useCallback(() => {
@@ -52,7 +55,7 @@ export default function PomodoroPage() {
   }, [sessions]);
 
   // Callback quando sessão é iniciada
-  const handleSessionStart = useCallback((sessionType: PomodoroSessionType) => {
+  const handleSessionStart = useCallback(async (sessionType: PomodoroSessionType) => {
     const newSession: Omit<PomodoroSession, 'id' | 'createdAt' | 'updatedAt'> = {
       taskId: selectedTask?.id,
       taskTitle: selectedTask?.title || 'Sessão sem tarefa específica',
@@ -64,7 +67,7 @@ export default function PomodoroPage() {
       notes: ''
     };
     
-    const createdSession = createSession(newSession);
+    const createdSession = await createSession(newSession);
     setActiveSessionId(createdSession.id);
     
     toast.success(
@@ -85,11 +88,11 @@ export default function PomodoroPage() {
   }, [selectedTask, createSession]);
 
   // Callback quando sessão é completada
-  const handleSessionComplete = useCallback((sessionType: PomodoroSessionType, duration: number) => {
+  const handleSessionComplete = useCallback(async (sessionType: PomodoroSessionType, duration: number) => {
     if (!activeSessionId) return;
     
     // Atualizar sessão como completada
-    const updatedSession = updateSession(activeSessionId, {
+    const updatedSession = await updateSession(activeSessionId, {
       status: 'completed',
       endTime: new Date()
     });
